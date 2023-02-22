@@ -1,0 +1,31 @@
+---
+title: "Data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(meatrics)
+```
+
+## Package Data
+
+There are two data-sets embedded in *meatrics*: `expert_graders` and `devices`. Both datasets emulate the expected format of the input data-frame(s) for all functions.
+
+```{r}
+# load human grader data
+data("expert_graders")
+expert_graders
+```
+
+```{r}
+# load device data
+data("devices")
+devices
+```
+
+Traits should follow the naming conventions of these sample datasets as some functions may rely on these to recognize the appropriate trait. Most functions rely on pivoting the data-frame to a wide format, using `to_wide()` . Other data-processing functions include `merge_device_grader()` which outputs a merged data-frame in wide format and `merge_device_grader_long()` which outputs a merged data-frame in long format.

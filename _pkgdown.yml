@@ -1,0 +1,35 @@
+url: ~
+template:
+  bootstrap: 5
+reference:
+- title: Pairwise Differences & Basic Visualisations
+- contents:
+  - diff_histogram
+  - pairwise_diff
+  - pairwise_scatter
+- title: Summary Statistics
+- contents:
+  - human_device_aus_marbling
+  - human_device_ema
+  - human_device_fat_colour
+  - human_device_meat_colour
+  - human_device_msa_marbling
+  - pairwise_stats
+  - threshold_diff
+- title: Other Statistical Visualisations
+- contents:
+  - pairwise_ccc
+  - fleiss
+  - icc_device_comparison
+  - icc_line
+  - extended_bac
+- title: Within-Device Comparisons
+- contents:
+  - device_image_diff
+  - device_image_diff_discrete
+  - device_image_comparison
+- title: Data Processing
+- contents:
+  - merge_device_grader
+  - merge_device_grader_long
+  - to_wide
