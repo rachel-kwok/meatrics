@@ -27,7 +27,7 @@ $$
 
 $\bar{P}$ is defined as the observed agreement, $\bar{P}_e$ is the expected agreement if the ratings were completely random. Hence, the numerator is defined as the degree of agreement actually achieved above chance whereas the denominator is the degree of agreement that is attainable above chance.
 
-`fleiss_meat()` reports on category-wise Fleiss Kappa, which can be interpreted as the probability of a randomly chosen rater assigning an item to a category, given another randomly chosen rater has also assigned that item to the category. The formula for $A_{k}$ , agreement in category $k$ is:
+`fleiss()` reports on category-wise Fleiss Kappa, which can be interpreted as the probability of a randomly chosen rater assigning an item to a category, given another randomly chosen rater has also assigned that item to the category. The formula for $A_{k}$ , agreement in category $k$ is:
 
 $$
 A_{k} = \frac{\sum_{i=1}^{n}r_{ik}(r_{ik}-1)}{\sum_{i=1}^{n}r_{ik}(r_{i}-1)}
@@ -49,7 +49,7 @@ fleiss(expert_graders, df2 = devices, device_status = FALSE, variable = "meat_co
 
 ## ICC (Intra-class Correlation Coefficient)
 
-The ICC is commonly used to describe how strongly units of the same group resemble one another. In that sense, it can also be seen as an assessment of rater agreement. To summarise, ICC can be considered as a ratio looking at the variance of interest divided by total variance. It is derived from
+The ICC is commonly used to describe how strongly units of the same group resemble one another. In that sense, it can also be seen as an assessment of rater agreement. To summarise, ICC can be considered as a ratio looking at the variance of interest divided by total variance.
 
 There are 10 different types of ICC and 6 defined by Shrout and Fleiss (1979). It is most relevant to consider the two-way mixed average score ICC (ICC3k) and the two-way mixed single-rater score (ICC3) for the purpose of this R package.
 

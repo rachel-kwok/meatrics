@@ -19,7 +19,9 @@ icc_device_comparison(df, df2, variable, grader_count)
 A line chart of ICC.
 }
 \description{
-ICC Line Chart over Time (Singular Device v Group of Expert Graders)
+This function computes the ICC(3,1) value for each date grouping expert graders
+and one device at a time to assess any significant difference between how
+each device compares to the expert graders.
 }
 \examples{
 data("expert_graders", package = "meatrics")

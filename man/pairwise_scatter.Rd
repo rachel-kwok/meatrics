@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualisations.R
 \name{pairwise_scatter}
 \alias{pairwise_scatter}
-\title{Pairwise Scatterplots}
+\title{Pairwise Scatterplots (Continuous Traits)}
 \usage{
 pairwise_scatter(df, device_status = FALSE, df2 = NULL, variable, line = TRUE)
 }

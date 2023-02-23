@@ -1,20 +1,14 @@
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Install Package:           'Cmd + Shift + B'
-#   Check Package:             'Cmd + Shift + E'
-#   Test Package:              'Cmd + Shift + T'
-
-#' Pairwise Scatterplots
+#' Pairwise Scatterplots (Continuous Traits)
 #'
 #' This function plots pairwise scatter-plots of all graders in the input
 #' data-frame on any variable of interest.
 #'
 #' @param df Data-frame in long format.
+#' @param device_status A boolean denoting if df is the device data-frame; default assumes grader data-frame.
+#' This parameter is arbitrary if your df2 is not null.
 #' @param df2 If not null, df2 must be the device data-frame in long format.
 #' @param variable A valid column name denoting the variable of interest
 #' @param line A boolean for plotting y = x; default is set to TRUE.
-#' @param device_status A boolean denoting if df is the device data-frame; default assumes grader data-frame.
-#' This parameter is arbitrary if your df2 is not null.
 #' @return A pairwise scatterplot of all graders' assessment on the variable of interest
 #'
 #' @examples
@@ -48,7 +42,8 @@ pairwise_scatter <- function(df,
   for (i in 3:(length(columns)-1)) {
     for (j in (i+1):length(columns)) {
       p <- ggplot(new_df, aes_string(x = as.name(columns[i]), y = as.name(columns[j]))) +
-        geom_point(size = 0.3) + ggtitle(paste(columns[i], "vs", columns[j])) + coord_equal() + theme_bw()
+        geom_point(size = 0.3) + ggtitle(paste(columns[i], "vs", columns[j])) +
+        coord_equal() + theme_bw()
 
       # resizing title as devices seem to have longer names
       if (device_status) {
@@ -66,6 +61,80 @@ pairwise_scatter <- function(df,
 
   plot_grid(plotlist = plots, ncol = 3)
 }
+
+
+#' Pairwise Heatmaps (Discrete Traits)
+#'
+#' This function plots pairwise heatmaps of all graders in the input
+#' data-frame on any discrete variable of interest.
+#'
+#' @param df Data-frame in long format.
+#' @param device_status A boolean denoting if df is the device data-frame; default assumes grader data-frame.
+#' This parameter is arbitrary if your df2 is not null.
+#' @param variable A valid column name denoting the variable of interest
+#' @return 3 pairwise heatmaps of graders' assessment on the discrete variable of interest
+#'
+#' @examples
+#' data("expert_graders", package = "meatrics")
+#' pairwise_heatmap(expert_graders, device_status = FALSE, variable = "aus_marbling")
+#'
+#' @import tidyr
+#' @import ggplot2
+#' @import cowplot
+#'
+#' @export
+
+pairwise_heatmap <- function(df,
+                             device_status = FALSE,
+                             variable) {
+
+  df[[variable]] <- as.factor(df[[variable]])
+  df <- to_wide(df, variable, device_status)
+  columns <- names(df)
+  plots <- list()
+
+  for (i in 3:(length(columns)-1)) {
+    for (j in (i+1):length(columns)) {
+      plots[[paste(columns[i],columns[j])]] <- heatmap_compare(df,
+                                                               c(columns[i], columns[j]))
+    }
+  }
+
+  cowplot::plot_grid(plotlist = plots, ncol = 3)
+}
+
+# helper function
+heatmap_compare <- function(df,
+                            graders) {
+
+  df <- df[, names(df) %in% graders]
+  colnames(df) <- c("A", "B")
+  df <- df |> group_by(A, B) |> summarise(Frequency = n())
+  df$is_diag <- df$A == df$B
+
+  # ignore
+
+  #all_combinations <- expand.grid(A = levels, B = levels)
+  #existing_combinations <- df[, 1:2] |> distinct()
+  #missing_combinations <- setdiff(all_combinations, existing_combinations)
+  #for (i in 1:nrow(missing_combinations)) {
+    #df <- rbind(df, data.frame(A = missing_combinations[i, 1],
+                               #B = missing_combinations[i, 2],
+                               #Frequency = NA))
+  #}
+
+  return(ggplot(df, aes(x = A, y = B, fill = Frequency)) +
+           geom_tile(show.legend = FALSE)  +
+           scale_fill_gradient(low = "white", high = "#ff7f7f") +
+           geom_tile(aes(colour = is_diag), size = 0.2, show.legend = FALSE) +
+           geom_text(aes(label = Frequency)) +
+           scale_colour_manual(values = c("grey","black"), guide = "none") +
+           labs(x = graders[1],
+                y = graders[2],
+                title = paste(graders[1], "v", graders[2])) +
+           theme_bw())
+}
+
 
 #' Bar chart of category-wise Fleiss Kappa
 #'
@@ -149,12 +218,14 @@ fleiss <- function(df,
         scale_fill_manual(values = meat_colour) +
         ggtitle("Meat Colour Fleiss Kappa") +
         labs(x = "Meat Colour Grades", y = "Kappa", fill = "Grades") +
+        scale_y_continuous(limits = c(0, 1)) +
         theme_bw()
     } else {
       kappa_df |> ggplot(aes(x = Var1, y = Freq, fill = device)) +
         geom_bar(position = "dodge", stat = "identity", color = "black") +
         ggtitle("Meat Colour Fleiss Kappa") +
         labs(x = "Meat Colour Grades", y = "Kappa", fill = "Device Type") +
+        scale_y_continuous(limits = c(0, 1)) +
         theme_bw()
     }
   } else if (variable == "fat_colour") {
@@ -164,11 +235,13 @@ fleiss <- function(df,
         scale_fill_manual(values = fat_colour) +
         ggtitle("Fat Colour Fleiss Kappa") +
         labs(x = "Fat Colour Grades", y = "Kappa", fill = "Grades") +
+        scale_y_continuous(limits = c(0, 1)) +
         theme_bw()
     } else {
       kappa_df |> ggplot(aes(x = Var1, y = Freq, fill = device)) +
         geom_bar(position = "dodge", stat = "identity", color = "black") +
         ggtitle("Fat Colour Fleiss Kappa") +
+        scale_y_continuous(limits = c(0, 1)) +
         labs(x = "Fat Colour Grades", y = "Kappa", fill = "Device Type") + theme_bw()
     }
   } else if (variable == "aus_marbling") {
@@ -178,12 +251,14 @@ fleiss <- function(df,
         geom_bar(stat="identity", color = "black") +
         scale_fill_manual(values = red) +
         ggtitle("AUS Marbling Fleiss Kappa") +
+        scale_y_continuous(limits = c(0, 1)) +
         labs(x = "AUS Marbling Grades", y = "Kappa", fill = "Grades") + theme_bw()
     } else {
       kappa_df |> ggplot(aes(x = Var1, y = Freq, fill = device)) +
         geom_bar(position = "dodge", stat = "identity", color = "black") +
         ggtitle("AUS Marbling Fleiss Kappa") +
         labs(x = "AUS Marbling Grades", y = "Kappa") +
+        scale_y_continuous(limits = c(0, 1)) +
         labs(fill = "Device Type") + theme_bw()
     }
   }
@@ -206,8 +281,8 @@ fleiss <- function(df,
 #' @param df2 Device data-frame in long format.
 #' @param variable A valid column name denoting the variable of interest.
 #' @param partitions An integer specifying how many groups to split the variable into.
-#' @param message A boolean denoting if the CCC values should be printed to terminal.
-#' @return A radar chart of pairwise CCC.
+#' @param table A boolean denoting if the CCC values should be formatted in a table.
+#' @return A radar chart or table of pairwise CCC.
 #'
 #' @import fmsb
 #' @import tibble
@@ -228,7 +303,7 @@ pairwise_ccc <- function(df,
                          df2 = NULL,
                          variable,
                          partitions = 1,
-                         message = FALSE) {
+                         table = FALSE) {
 
   # checking that a whole number is given as input
   if (is.numeric(partitions)) {
@@ -317,20 +392,21 @@ pairwise_ccc <- function(df,
   rownames(result_df) <- result_df$rownames
   rownames(result_df)[1:2] <- c("Max", "Min")
 
-  colours <- c("#00AFBB", "#E7B800", "#FC4E07", "#A020F0", "#00FF00")
+  if (!table) {
+    colours <- c("#00AFBB", "#E7B800", "#FC4E07", "#A020F0", "#00FF00")
 
-  radarchart(result_df |> select(-rownames), cglcol = "grey", cglty = 1, cglwd = 0.8,
-             pcol = colours, pfcol = scales::alpha(colours, 0.1), plwd = 2,
-             plty = 1, vlcex = 0.5)
+    radarchart(result_df |> select(-rownames), cglcol = "grey", cglty = 1, cglwd = 0.8,
+               pcol = colours, pfcol = scales::alpha(colours, 0.1), plwd = 2,
+               plty = 1, vlcex = 0.5)
 
-  legend(
-    x = "bottom", legend = rownames(result_df[-c(1,2),]), horiz = TRUE,
-    bty = "n", pch = 20 , col = colours,
-    text.col = "black", cex = 1, pt.cex = 1
-  )
-
-  if (message) {
-    print(result_df[-c(1, 2), -c(1)])
+    legend(
+      x = "bottom", legend = rownames(result_df[-c(1,2),]), horiz = TRUE,
+      bty = "n", pch = 20 , col = colours,
+      text.col = "black", cex = 1, pt.cex = 1
+    )
+  } else {
+    result_df[-c(1, 2), -c(1)] |> round(3) |> gt(rownames_to_stub = TRUE) |>
+      tab_header(paste0("Pairwise CCC"))
   }
 }
 
@@ -414,6 +490,10 @@ icc_line <- function(df,
 
 #' ICC Line Chart over Time (Singular Device v Group of Expert Graders)
 #'
+#' This function computes the ICC(3,1) value for each date grouping expert graders
+#' and one device at a time to assess any significant difference between how
+#' each device compares to the expert graders.
+#'
 #' @param df Input expert grader data-frame in long format.
 #' @param df2 Input device data-frame in long format.
 #' @param variable A valid column name denoting the variable of interest.
@@ -451,9 +531,9 @@ icc_device_comparison <- function(df,
                    function(x) ICC(as.data.frame(lapply(x, as.numeric))))
 
     icc_values_df <- map2_df(temp, names(temp),
-                             ~ data.frame(kill_date = .y, ICC3 = .x$results$ICC[6],
-                                          lower = .x$results$`lower bound`[6],
-                                          upper = .x$results$`upper bound`[6],
+                             ~ data.frame(kill_date = .y, ICC3 = .x$results$ICC[3],
+                                          lower = .x$results$`lower bound`[3],
+                                          upper = .x$results$`upper bound`[3],
                                           graders = paste(colnames(df[,3:ncol(df)]),
                                                           collapse = ",")))
     return(icc_values_df)

@@ -2,11 +2,10 @@
 % Please edit documentation in R/tables.R
 \name{threshold_diff}
 \alias{threshold_diff}
-\title{Table containing counts of exact agreement and ranges of input thresholds}
+\title{Specific Grader Difference Table / Bar Chart}
 \usage{
 threshold_diff(
   df,
-  device_status = FALSE,
   variable,
   grader_a,
   grader_b,
@@ -20,19 +19,26 @@ threshold_diff(
 
 \item{variable}{A valid column name denoting the variable of interest}
 
-\item{grader_a}{First grader}
+\item{grader_a}{First grader.}
 
-\item{grader_b}{Second grader}
+\item{grader_b}{Second grader.}
 
-\item{units}{Specified units}
+\item{units}{An integer specifying how many units for the first threshold etc.}
 
 \item{visuals}{Will output either a stacked bar chart or a table. Can be either "table" or "bar", default is "table".}
 
-\item{partitions}{An integer specifying how many groups to split the variable into}
+\item{partitions}{An integer specifying how many groups to split the variable into.}
 }
 \value{
 A GT() table or ggplot2 stacked bar chart, categorizing differences into 4 categories.
 }
 \description{
-Table containing counts of exact agreement and ranges of input thresholds
+This function is a more flexible version of the AMILSC tables as it allows for
+two specific graders to be selected and compared. Additionally, it allows for
+the unit thresholds to be varied and partitions in the data to be made to observe
+changes across the entire range of the trait of interest.
+}
+\details{
+Note: there are still bugs in this function. It does not work for synthetic datasets,
+only for the original expert grader dataset.
 }

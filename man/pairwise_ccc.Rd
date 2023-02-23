@@ -10,7 +10,7 @@ pairwise_ccc(
   df2 = NULL,
   variable,
   partitions = 1,
-  message = FALSE
+  table = FALSE
 )
 }
 \arguments{
@@ -25,10 +25,10 @@ This parameter is arbitrary if your df2 is not null.}
 
 \item{partitions}{An integer specifying how many groups to split the variable into.}
 
-\item{message}{A boolean denoting if the CCC values should be printed to terminal.}
+\item{table}{A boolean denoting if the CCC values should be formatted in a table.}
 }
 \value{
-A radar chart of pairwise CCC.
+A radar chart or table of pairwise CCC.
 }
 \description{
 This function computes pairwise CCC for all graders present in the data-frame

@@ -49,18 +49,18 @@ pairwise_stats <- function(df,
 
         temp_df <- split_df |> rowwise() |>
           mutate(difference = list(abs(split_df[[col1]] - split_df[[col2]])),
-                 graders = paste(col1, "&", col2),
+                 graders = paste(col1, "v", col2),
                  date = unique(split_df$kill_date)) |>
           group_by(date, graders) |>
-          summarize(average_difference = mean(unlist(difference)),
+          summarize(average_difference = round(mean(unlist(difference)), 3),
                     median_difference = median(unlist(difference)),
                     max_difference = max(unlist(difference)),
-                    r_squared = cor(split_df[[col1]],
-                                    split_df[[col2]], method = "pearson")^2,
-                    kendall_tau = cor(split_df[[col1]],
-                                      split_df[[col2]], method = "kendall"),
-                    spearman_rho = cor(split_df[[col1]],
-                                       split_df[[col2]], method = "spearman"))
+                    r_squared = round(cor(split_df[[col1]],
+                                    split_df[[col2]], method = "pearson")^2, 3),
+                    kendall_tau = round(cor(split_df[[col1]],
+                                      split_df[[col2]], method = "kendall"), 3),
+                    spearman_rho = round(cor(split_df[[col1]],
+                                       split_df[[col2]], method = "spearman"), 3))
 
       })
 
@@ -125,15 +125,23 @@ pairwise_diff <- function(df, device_status = FALSE, variable) {
   result_df |> gt()
 }
 
-#' Table containing counts of exact agreement and ranges of input thresholds
+#' Specific Grader Difference Table / Bar Chart
+#'
+#' This function is a more flexible version of the AMILSC tables as it allows for
+#' two specific graders to be selected and compared. Additionally, it allows for
+#' the unit thresholds to be varied and partitions in the data to be made to observe
+#' changes across the entire range of the trait of interest.
+#'
+#' Note: there are still bugs in this function. It does not work for synthetic datasets,
+#' only for the original expert grader dataset.
 #'
 #' @param df Input dataframe in long format
 #' @param variable A valid column name denoting the variable of interest
-#' @param grader_a First grader
-#' @param grader_b Second grader
-#' @param units Specified units
+#' @param grader_a First grader.
+#' @param grader_b Second grader.
+#' @param units An integer specifying how many units for the first threshold etc.
 #' @param visuals Will output either a stacked bar chart or a table. Can be either "table" or "bar", default is "table".
-#' @param partitions An integer specifying how many groups to split the variable into
+#' @param partitions An integer specifying how many groups to split the variable into.
 #' @return A GT() table or ggplot2 stacked bar chart, categorizing differences into 4 categories.
 #'
 #' @import tidyverse
@@ -142,22 +150,29 @@ pairwise_diff <- function(df, device_status = FALSE, variable) {
 #'
 #' @export
 
-# note that this function doesn't work with synthetic dataset :(
+threshold_diff <- function(df,
+                           variable,
+                           grader_a,
+                           grader_b,
+                           units,
+                           visuals = "table",
+                           partitions = 1) {
 
-threshold_diff <- function(df, device_status = FALSE, variable, grader_a, grader_b, units, visuals = "table", partitions = 1) {
+  df$cold_grader <- as.character(df$cold_grader)
 
   if (is.numeric(partitions)) {
     if (round(partitions) == partitions) {
-      cut_points <- seq(min(df[[variable]], na.rm = TRUE), max(df[[variable]], na.rm = TRUE), length.out = partitions+1)
+      cut_points <- seq(min(df[[variable]], na.rm = TRUE),
+                        max(df[[variable]], na.rm = TRUE), length.out = partitions+1)
 
       data_list <- list()
       if (partitions == 1) {
-        data_list[[1]] <- to_wide(df, variable, device_status) |> select(-1, -2)
+        data_list[[1]] <- to_wide(df, variable, FALSE)
 
       } else {
         data_list <- split(df, cut(df[[variable]], breaks = cut_points, right = FALSE))
         for (i in 1:length(data_list)) {
-          data_list[[i]] <- to_wide(data_list[[i]], variable, device_status) |> select(-1, -2)
+          data_list[[i]] <- to_wide(data_list[[i]], variable, FALSE)
         }
       }
     } else {
@@ -187,7 +202,8 @@ threshold_diff <- function(df, device_status = FALSE, variable, grader_a, grader
     result_df[j, 1] <- paste0(round(cut_points[j], 2), "-", round(cut_points[j+1], 2))
   }
 
-  colnames(result_df) <- c("Range", "Exact Agreement", paste("Difference <=", units), paste(units, "< Difference", "<=", 2*units),
+  colnames(result_df) <- c("Range", "Exact Agreement", paste("Difference <=", units),
+                           paste(units, "< Difference", "<=", 2*units),
                            paste("Difference >", 2*units), "n")
 
   if (visuals == "table") {
